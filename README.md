@@ -3,6 +3,7 @@ Salary prediction task for Rabota.ru
 
 ## Demo
 
+TODO upload demo
 ![Demo](data/demo.gif)
 
 ## Technologies
@@ -14,7 +15,11 @@ Salary prediction task for Rabota.ru
 
 ### Methodology
 
+TODO
+
 ## Data Preprocessing
+
+TODO
 
 ## Training Pipeline
 
@@ -24,9 +29,11 @@ Salary prediction task for Rabota.ru
 Из-за того, что датасет изначально 
 был сбалансирован проводилась случайная выборка без дополнительной стратификации. В процессе обучения, модель видела
 только `train` множество, после каждой эпохи считались метрики на `validation` множестве, чтобы предотврадить
-переобучение (где применимо) и обученная модель валидировалась на `test` множестве
+переобучение (где применимо) и обученная модель валидировалась на `test` множестве.
 
 ### Metrics
+
+В качестве метрик была выбрана MAE, так как она легко интерпретируется и менее чувствительна к выбросам. С этой метрикой оптимизация во время обучения модели также эффективна с вычислительной точки зрения и более понятна для бизнеса в контексте прогнозирования заработной платы.
 
 ## Testing and Validation
 
@@ -40,39 +47,41 @@ Salary prediction task for Rabota.ru
 
 ### Experiments
 
-| Model                     | Embedding                      | Brier score | ROC-AUC | 
-|---------------------------|--------------------------------|-------------|---------|
-| **Linear Regression**     | **RuBERT-tiny**                | 0.35        | 0.36    |
-| **Linear Regression**     | **RuBERT**                     | 0.21        | 0.29    |
-| **Linear Regression**     | **FastText**                   | 0.36        | 0.33    |
-| **Linear Regression**     | **Sentence RuBERT**            | 0.41        | 0.36    |
-| **Linear Regression**     | **Sentence Multilingual BERT** | 0.24        | 0.22    |
-| **CatBoost Regressor**    | **RuBERT-tiny**                | 0.63        | 0.51    |
-| **CatBoost Regressor**    | **RuBERT**                     | 0.62        | 0.69    |
-| **CatBoost Regressor**    | **FastText**                   | 0.62        | 0.58    |
-| **CatBoost Regressor**    | **Sentence RuBERT**            | 0.63        | 0.59    |
-| **CatBoost Regressor**    | **Sentence Multilingual BERT** | 0.61        | 0.69    |
-| **Two Layers Perceptron** | **RuBERT-tiny**                | 0.66        | 0.74    |
-| **Two Layers Perceptron** | **RuBERT**                     | 0.74        | 0.63    |
-| **Two Layers Perceptron** | **FastText**                   | 0.61        | 0.62    |
-| **Two Layers Perceptron** | **Sentence RuBERT**            | 0.6         | 0.61    |
-| **Two Layers Perceptron** | **Sentence Multilingual BERT** | 0.7         | 0.61    |
+| Model                     | Embedding                      | MAE | 
+|---------------------------|--------------------------------|-----|
+| **Linear Regression**     | **RuBERT-tiny**                | 
+| **Linear Regression**     | **RuBERT**                     |
+| **Linear Regression**     | **FastText**                   |
+| **Linear Regression**     | **Sentence RuBERT**            |
+| **Linear Regression**     | **Sentence Multilingual BERT** |
+| **CatBoost Regressor**    | **RuBERT-tiny**                |
+| **CatBoost Regressor**    | **RuBERT**                     |
+| **CatBoost Regressor**    | **FastText**                   |
+| **CatBoost Regressor**    | **Sentence RuBERT**            |
+| **CatBoost Regressor**    | **Sentence Multilingual BERT** | 
+| **Two Layers Perceptron** | **RuBERT-tiny**                | 
+| **Two Layers Perceptron** | **RuBERT**                     | 
+| **Two Layers Perceptron** | **FastText**                   | 
+| **Two Layers Perceptron** | **Sentence RuBERT**            |
+| **Two Layers Perceptron** | **Sentence Multilingual BERT** | 
 
 ## Deployment
 
 Все модели были реализованы с использованием абстрактных интерфейсов, что позволяет единообразно использовать их в
 сервисе и при необходимости добавлять новые модели. Взаимодействие моделей с пользователем происходит через streamlit
-web-service. При загрузке своего резюме пользователю 
+web-service. При загрузке своего резюме пользователю отображается предсказанная зарплата.
 
 ## Product Details
 
 ### Context
 
+TODO
+
 ### Interface
 
 Изначально, пользователю предлагается загрузить свое резюме -- мы реализовали подгрузку резюме в формате Word, так как
 это самый популярный формат резюме в 2023 году. После того, как пользователь загрузил свое резюме оно отобразится справа
-на главной странице, 
+на главной странице, будет отображена предсказанная зарплата.
 
 ### Scaling
 
