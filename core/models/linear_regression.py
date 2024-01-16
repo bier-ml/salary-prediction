@@ -19,7 +19,7 @@ class LinearRegressionModel(BaseMatchingModel):
         self.embedding_model = embedding_model
 
     def train(
-        self, dataset: pd.DataFrame, test_size: float = 0.2, seed: int = 42
+        self, dataset: pd.DataFrame, test_size: float = 0.2, seed: int = 42, **kwargs
     ) -> Any:
         embeddings = dataset.emb.to_numpy()
         embeddings = np.array(list(map(np.array, embeddings)))
@@ -29,7 +29,7 @@ class LinearRegressionModel(BaseMatchingModel):
             embeddings, target, test_size=test_size, random_state=seed
         )
 
-        self.model.fit(X_train, y_train)
+        self.model.fit(X_train, y_train, **kwargs)
 
         print("Model trained")
 
