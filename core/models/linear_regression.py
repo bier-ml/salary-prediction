@@ -48,7 +48,7 @@ class LinearRegressionModel(BaseMatchingModel):
         else:
             raise Exception("Wrong type of vacancy")
 
-        return self.model.predict([emb])
+        return self.model.predict(emb)
 
     def save_model(self, path: Path | str) -> None:
         with open(str(path), "wb") as f:
