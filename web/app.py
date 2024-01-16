@@ -1,19 +1,29 @@
 import streamlit as st
 
-from core.embedding_models import EmbeddingModel
-from core.models import CatboostRegressionModel
+from core.embedding_models import EmbeddingModel, FastTextEmbeddingModel
+from core.models import CatboostRegressionModel, LinearRegressionModel
 from core.models.base_model import BaseMatchingModel
 from web import ROOT_PATH
 
 
-def load_model(emb_model, name: str = "catboost_rubert-tiny2.pkl") -> BaseMatchingModel:
-    cb_model = CatboostRegressionModel(embedding_model=emb_model)
-    cb_model.load_model(ROOT_PATH / f"data/{name}")
-    return cb_model
+embedding_mapping = {
+    "rubert-tiny2": EmbeddingModel(),
+    "fasttext": EmbeddingModel(),
+}
 
 
-embedding_model = EmbeddingModel()
-trained_model = load_model(embedding_model)
+def load_model(name: str = "catboost_rubert-tiny2.pkl") -> BaseMatchingModel:
+    model_mapping = {
+        "catboost": CatboostRegressionModel,
+        "linreg": LinearRegressionModel,
+    }
+    model_type = name.split("_")[0]
+    emb_model = embedding_mapping[name.split(".")[0].split("_")[1]]
+
+    model = model_mapping[model_type](embedding_model=emb_model)
+    model.load_model(ROOT_PATH / f"data/{name}")
+
+    return model
 
 
 AVAILABLE_SCHEDULE: tuple = (
@@ -55,7 +65,7 @@ def run_server():
     if run_button:
         if job_name and model and schedule and city:
             try:
-                trained_model = load_model(embedding_model, model)
+                trained_model = load_model(model)
             except:
                 st.error("Loading model error")
 
