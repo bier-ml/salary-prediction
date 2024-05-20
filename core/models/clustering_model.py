@@ -49,8 +49,8 @@ class StackedModels(BaseMatchingModel):
 
     def evaluate(self, X_dict: Dict[int, Any], y_dict: Dict[int, Any]) -> float:
         return sum(
-            mean_absolute_error(y_dict[cluster], self.models[cluster].predict(X_dict[cluster]))
-            for cluster in self.models
+            mean_absolute_error(y_dict[cluster], model.predict(X_dict[cluster]))
+            for cluster, model in self.models.items()
         ) / len(self.models)
 
     def predict(self, embedding: np.ndarray, cluster_label: int = 0) -> float:
