@@ -18,24 +18,20 @@ class LinearRegressionModel(BaseMatchingModel):
         self.metric = metric
         self.embedding_model = embedding_model
 
-    def train(
-        self, dataset: pd.DataFrame, test_size: float = 0.2, seed: int = 42, **kwargs
-    ) -> Any:
+    def train(self, dataset: pd.DataFrame, test_size: float = 0.2, seed: int = 42, **kwargs) -> Any:
         embeddings = dataset.emb.to_numpy()
         embeddings = np.array(list(map(np.array, embeddings)))
         target = dataset.target.to_numpy()
 
-        X_train, X_test, y_train, y_test = train_test_split(
-            embeddings, target, test_size=test_size, random_state=seed
-        )
+        X_train, X_test, y_train, y_test = train_test_split(embeddings, target, test_size=test_size, random_state=seed)
 
         self.model.fit(X_train, y_train, **kwargs)
 
         print("Model trained")
-
-        y_pred = self.model.predict(X_test)
-        test_score = self.metric(y_test, y_pred)
-        print(f"Test score is {test_score}")
+        if test_size > 0.0:
+            y_pred = self.model.predict(X_test)
+            test_score = self.metric(y_test, y_pred)
+            print(f"Test score is {test_score}")
 
     def predict(self, vacancy: str | np.ndarray) -> float:
         if self.embedding_model is None:

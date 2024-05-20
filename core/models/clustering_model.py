@@ -41,37 +41,52 @@ class StackedModels(BaseMatchingModel):
         return df_cluster
 
     @staticmethod
-    def split_dataset(dataset: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        if "cluster_label" not in dataset.columns:
-            raise KeyError("cluster_label not found in the DataFrame")
-
-        return dataset.drop("cluster_label", axis=1), dataset[["cluster_label"]]
-
-    def split_dict_dataset(self, dataset_dict: Dict[int, pd.DataFrame], test_size: float = 0.2, seed: int = 42):
+    def split_dict_dataset(
+        dataset_dict: Dict[int, pd.DataFrame],
+        test_size: float = 0.2,
+        seed: int = 42,
+    ) -> Dict[int, Tuple[pd.DataFrame, pd.DataFrame]]:
         return {
             cluster_label: train_test_split(
-                self.split_dataset(dataset),
+                dataset,
                 test_size=test_size,
                 random_state=seed,
             )
             for cluster_label, dataset in dataset_dict.items()
         }
 
-    def train(self, dataset_dict: Dict[int, pd.DataFrame], **train_kwargs) -> Self:
-        split_dataset_dict = self.split_dict_dataset(dataset_dict)
-        for cluster_label, (X_train, y_train, _, _) in split_dataset_dict.items():
+    def train(self, dataset_dict: Dict[int, pd.DataFrame], test_size: float = 0.2, **train_kwargs) -> Self:
+        split_dataset_dict = self.split_dict_dataset(dataset_dict, test_size=test_size)
+        for cluster_label, (dataset_train, _) in split_dataset_dict.items():
             model = self.base_model_class()
-            model.train(dataset=X_train, **train_kwargs)
+            model.train(dataset=dataset_train, test_size=0.0, **train_kwargs)
             self.models[cluster_label] = model
 
         print("Model trained")
+
+        if test_size > 0.0:
+            test_score = self.evaluate({k: v for k, (_, v) in split_dataset_dict.items()})
+            print(f"Test score is {test_score}")
+
         return self
 
-    def evaluate(self, X_dict: Dict[int, Any], y_dict: Dict[int, Any]) -> float:
-        return sum(
-            mean_absolute_error(y_dict[cluster], model.predict(X_dict[cluster]))
-            for cluster, model in self.models.items()
-        ) / len(self.models)
+    def evaluate(self, dataset_dict: Dict[int, pd.DataFrame]) -> float:
+        cluster_metrics = {}
+        for cluster_label, model in self.models.items():
+            dataset = dataset_dict[cluster_label]
+
+            assert "emb" in dataset.columns
+            assert "target" in dataset.columns
+
+            embeddings = np.array(list(map(np.array, dataset.emb.to_numpy())))
+            target = dataset.target.to_numpy()
+            X, y_true = embeddings, target
+
+            y_pred = model.predict(X)
+            cluster_metrics[cluster_label] = mean_absolute_error(y_true, y_pred)
+
+        print(cluster_metrics)
+        return np.mean(list(cluster_metrics.values()))
 
     def predict(self, embedding: np.ndarray, cluster_label: int = 0) -> float:
         return self.models[cluster_label].predict(embedding)
@@ -89,9 +104,13 @@ def objective(trial, dataset_dict: Dict[int, pd.DataFrame], params: Optional[Dic
         }
 
     model = StackedModels()
-    model.train(full_dataset=dataset_dict, **params)
 
-    mae = model.evaluate(X_dict=dataset_dict, y_dict=dataset_dict)
+    split_dataset_dict = model.split_dict_dataset(dataset_dict)
+    train_dataset_dict = {k: v for k, (v, _) in split_dataset_dict.items()}
+    test_dataset_dict = {k: v for k, (_, v) in split_dataset_dict.items()}
+
+    model = model.train(full_dataset=train_dataset_dict, **params)
+    mae = model.evaluate(dataset_dict=test_dataset_dict)
     return mae
 
 
