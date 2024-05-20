@@ -1,6 +1,8 @@
 import json
+from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
+import dill as pickle
 import numpy as np
 import optuna
 import pandas as pd
@@ -102,6 +104,17 @@ class StackedModels(BaseMatchingModel):
 
     def predict(self, embedding: np.ndarray, cluster_label: int = 0) -> float:
         return self.models[cluster_label].predict(embedding)
+
+    def save_model(self, path: Path | str) -> None:
+        with open(str(path), "wb") as f:
+            pickle.dump(self.models, f)
+        print(f"Model saved at {path}")
+
+    def load_model(self, path: Path | str) -> Self:
+        with open(path, "rb") as f:
+            self.models = pickle.load(f)
+        print("Model successfully loaded")
+        return self
 
 
 def objective(trial, dataset_dict: Dict[int, pd.DataFrame], params: Optional[Dict[str, Any]] = None) -> float:
