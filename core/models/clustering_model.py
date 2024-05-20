@@ -1,6 +1,7 @@
-from typing import Dict, Any, Self
+from typing import Dict, Any, Self, Optional
 
 import numpy as np
+import optuna
 import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.metrics import mean_absolute_error
@@ -54,3 +55,29 @@ class StackedModels(BaseMatchingModel):
 
     def predict(self, embedding: np.ndarray, cluster_label: int = 0) -> float:
         return self.models[cluster_label].predict(embedding)
+
+
+def objective(trial, dataset_dict: Dict[int, pd.DataFrame], params: Optional[Dict[str, Any]] = None) -> float:
+    if params is None:
+        params = {
+            "iterations": 1000,
+            "learning_rate": trial.suggest_float("learning_rate", 1e-3, 0.1, log=True),
+            "depth": trial.suggest_int("depth", 1, 10),
+            "subsample": trial.suggest_float("subsample", 0.05, 1.0),
+            "colsample_bylevel": trial.suggest_float("colsample_bylevel", 0.05, 1.0),
+            "min_data_in_leaf": trial.suggest_int("min_data_in_leaf", 1, 100),
+        }
+
+    model = StackedModels()
+    model.train(full_dataset=dataset_dict, **params)
+
+    mae = model.evaluate(X_dict=dataset_dict, y_dict=dataset_dict)
+    return mae
+
+
+def hyperparameters_tuning():
+    study = optuna.create_study(direction="minimize")
+    study.optimize(objective, n_trials=20)
+
+    best_params = study.best_params
+    print("Best hyperparameters:", best_params)
