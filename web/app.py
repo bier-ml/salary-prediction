@@ -63,8 +63,8 @@ def run_server():
         if job_name and model and schedule and city:
             try:
                 trained_model = load_model(model)
-            except:
-                st.error("Loading model error")
+            except Exception as e:
+                st.error(f"Loading model error: {str(e)}")
 
             result_placeholder.text("Processing...")
             result = trained_model.predict(source)
