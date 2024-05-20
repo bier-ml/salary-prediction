@@ -20,9 +20,7 @@ class DummyEmbeddingModel:
         np.random.seed(42)
 
     @staticmethod
-    def generate(
-        text: str | list[str], dim: int = 312
-    ) -> np.ndarray | Iterable[np.ndarray]:
+    def generate(text: str | list[str], dim: int = 312) -> np.ndarray | Iterable[np.ndarray]:
         if isinstance(text, str):
             return np.random.rand(dim)
         else:

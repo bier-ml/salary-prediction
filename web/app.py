@@ -1,10 +1,9 @@
 import streamlit as st
 
-from core.embedding_models import EmbeddingModel, FastTextEmbeddingModel
+from core.embedding_models import EmbeddingModel
 from core.models import CatboostRegressionModel, LinearRegressionModel
 from core.models.base_model import BaseMatchingModel
 from web import ROOT_PATH
-
 
 embedding_mapping = {
     "rubert-tiny2": EmbeddingModel(),
@@ -35,9 +34,7 @@ AVAILABLE_SCHEDULE: tuple = (
     "вахта",
 )
 
-AVAILABLE_MODELS: tuple = tuple(
-    [el.name for el in list((ROOT_PATH / "data/").glob("*.pkl"))]
-)
+AVAILABLE_MODELS: tuple = tuple([el.name for el in list((ROOT_PATH / "data/").glob("*.pkl"))])
 
 
 def run_server():

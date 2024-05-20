@@ -8,13 +8,7 @@ import pandas as pd
 
 def change_type_to_list(x):
     return np.array(
-        [
-            float(val)
-            for val in re.split(
-                "\s+", x.replace("[", "").replace("]", "").replace("\n", "")
-            )
-            if val
-        ]
+        [float(val) for val in re.split("\s+", x.replace("[", "").replace("]", "").replace("\n", "")) if val]
     )
 
 

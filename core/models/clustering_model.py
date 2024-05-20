@@ -1,5 +1,5 @@
 import json
-from typing import Dict, Any, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 import optuna
