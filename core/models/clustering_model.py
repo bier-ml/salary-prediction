@@ -1,4 +1,5 @@
-from typing import Dict, Any, Self, Optional, Tuple
+import json
+from typing import Dict, Any, Optional, Tuple
 
 import numpy as np
 import optuna
@@ -6,6 +7,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import train_test_split
+from typing_extensions import Self
 
 from core.models import CatboostRegressionModel
 from core.models.base_model import BaseMatchingModel
@@ -28,8 +30,9 @@ class ClusteringModel(BaseMatchingModel):
 
 
 class StackedModels(BaseMatchingModel):
-    def __init__(self, base_model_class: type[CatboostRegressionModel] = CatboostRegressionModel):
+    def __init__(self, base_model_class: type[CatboostRegressionModel] = CatboostRegressionModel, **model_kwargs):
         self.base_model_class = base_model_class
+        self.base_model_params = {**model_kwargs}
         self.models: Dict[int, BaseMatchingModel] = {}
 
     @staticmethod
@@ -63,9 +66,13 @@ class StackedModels(BaseMatchingModel):
                 raise KeyError(f"{column} not in the DataFrame")
 
     def train(self, dataset_dict: Dict[int, pd.DataFrame], test_size: float = 0.2, **train_kwargs) -> Self:
-        split_dataset_dict = self.split_dict_dataset(dataset_dict, test_size=test_size)
+        if test_size > 0.0:
+            split_dataset_dict = self.split_dict_dataset(dataset_dict, test_size=test_size)
+        else:
+            split_dataset_dict = {k: (v, None) for k, v in dataset_dict.items()}
+
         for cluster_label, (dataset_train, _) in split_dataset_dict.items():
-            model = self.base_model_class()
+            model = self.base_model_class(**self.base_model_params)
             model.train(dataset=dataset_train, test_size=0.0, **train_kwargs)
             self.models[cluster_label] = model
 
@@ -90,7 +97,7 @@ class StackedModels(BaseMatchingModel):
             y_pred = model.predict(X)
             cluster_metrics[cluster_label] = mean_absolute_error(y_true, y_pred)
 
-        print(cluster_metrics)
+        print(json.dumps(cluster_metrics, indent=4))
         return np.mean(list(cluster_metrics.values()))
 
     def predict(self, embedding: np.ndarray, cluster_label: int = 0) -> float:
@@ -108,20 +115,20 @@ def objective(trial, dataset_dict: Dict[int, pd.DataFrame], params: Optional[Dic
             "min_data_in_leaf": trial.suggest_int("min_data_in_leaf", 1, 100),
         }
 
-    model = StackedModels()
+    model = StackedModels(**params)
 
     split_dataset_dict = model.split_dict_dataset(dataset_dict)
     train_dataset_dict = {k: v for k, (v, _) in split_dataset_dict.items()}
     test_dataset_dict = {k: v for k, (_, v) in split_dataset_dict.items()}
 
-    model = model.train(full_dataset=train_dataset_dict, **params)
+    model = model.train(dataset_dict=train_dataset_dict)
     mae = model.evaluate(dataset_dict=test_dataset_dict)
     return mae
 
 
-def hyperparameters_tuning() -> Dict[str, Any]:
+def hyperparameters_tuning(dataset_dict: Dict[int, pd.DataFrame]) -> Dict[str, Any]:
     study = optuna.create_study(direction="minimize")
-    study.optimize(objective, n_trials=20)
+    study.optimize(lambda x: objective(x, dataset_dict=dataset_dict), n_trials=20)
 
     best_params = study.best_params
     print("Best hyperparameters:", best_params)

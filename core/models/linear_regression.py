@@ -23,8 +23,18 @@ class LinearRegressionModel(BaseMatchingModel):
         embeddings = np.array(list(map(np.array, embeddings)))
         target = dataset.target.to_numpy()
 
-        X_train, X_test, y_train, y_test = train_test_split(embeddings, target, test_size=test_size, random_state=seed)
+        if test_size > 0.0:
+            X_train, X_test, y_train, y_test = train_test_split(
+                embeddings,
+                target,
+                test_size=test_size,
+                random_state=seed,
+            )
+        else:
+            X_train, y_train = embeddings, target
+            X_test, y_test = embeddings, target
 
+        print(kwargs)
         self.model.fit(X_train, y_train, **kwargs)
 
         print("Model trained")
