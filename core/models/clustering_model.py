@@ -1,10 +1,11 @@
-from typing import Dict, Any, Self, Optional
+from typing import Dict, Any, Self, Optional, Tuple
 
 import numpy as np
 import optuna
 import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.metrics import mean_absolute_error
+from sklearn.model_selection import train_test_split
 
 from core.models import CatboostRegressionModel
 from core.models.base_model import BaseMatchingModel
@@ -36,12 +37,31 @@ class StackedModels(BaseMatchingModel):
         if "cluster_label" not in full_dataset.columns:
             raise KeyError("cluster_label not found in the DataFrame")
 
-        return full_dataset[full_dataset["cluster_label"] == cluster_label]
+        df_cluster = full_dataset[full_dataset["cluster_label"] == cluster_label]
+        return df_cluster
+
+    @staticmethod
+    def split_dataset(dataset: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        if "cluster_label" not in dataset.columns:
+            raise KeyError("cluster_label not found in the DataFrame")
+
+        return dataset.drop("cluster_label", axis=1), dataset[["cluster_label"]]
+
+    def split_dict_dataset(self, dataset_dict: Dict[int, pd.DataFrame], test_size: float = 0.2, seed: int = 42):
+        return {
+            cluster_label: train_test_split(
+                self.split_dataset(dataset),
+                test_size=test_size,
+                random_state=seed,
+            )
+            for cluster_label, dataset in dataset_dict.items()
+        }
 
     def train(self, dataset_dict: Dict[int, pd.DataFrame], **train_kwargs) -> Self:
-        for cluster_label, dataset in dataset_dict.items():
+        split_dataset_dict = self.split_dict_dataset(dataset_dict)
+        for cluster_label, (X_train, y_train, _, _) in split_dataset_dict.items():
             model = self.base_model_class()
-            model.train(dataset=dataset, **train_kwargs)
+            model.train(dataset=X_train, **train_kwargs)
             self.models[cluster_label] = model
 
         print("Model trained")
