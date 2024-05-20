@@ -119,9 +119,10 @@ def objective(trial, dataset_dict: Dict[int, pd.DataFrame], params: Optional[Dic
     return mae
 
 
-def hyperparameters_tuning():
+def hyperparameters_tuning() -> Dict[str, Any]:
     study = optuna.create_study(direction="minimize")
     study.optimize(objective, n_trials=20)
 
     best_params = study.best_params
     print("Best hyperparameters:", best_params)
+    return best_params
