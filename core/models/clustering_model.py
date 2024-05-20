@@ -55,6 +55,13 @@ class StackedModels(BaseMatchingModel):
             for cluster_label, dataset in dataset_dict.items()
         }
 
+    @staticmethod
+    def _check_dataset_format(dataset: pd.DataFrame) -> None:
+        necessary_columns = ("emb", "target")
+        for column in necessary_columns:
+            if column not in dataset.columns:
+                raise KeyError(f"{column} not in the DataFrame")
+
     def train(self, dataset_dict: Dict[int, pd.DataFrame], test_size: float = 0.2, **train_kwargs) -> Self:
         split_dataset_dict = self.split_dict_dataset(dataset_dict, test_size=test_size)
         for cluster_label, (dataset_train, _) in split_dataset_dict.items():
@@ -74,9 +81,7 @@ class StackedModels(BaseMatchingModel):
         cluster_metrics = {}
         for cluster_label, model in self.models.items():
             dataset = dataset_dict[cluster_label]
-
-            assert "emb" in dataset.columns
-            assert "target" in dataset.columns
+            self._check_dataset_format(dataset)
 
             embeddings = np.array(list(map(np.array, dataset.emb.to_numpy())))
             target = dataset.target.to_numpy()
