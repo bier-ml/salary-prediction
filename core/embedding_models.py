@@ -2,7 +2,7 @@ from typing import Iterable
 
 import numpy as np
 from gensim.models.fasttext import FastText
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, util
 
 from core import ROOT_PATH
 
@@ -12,6 +12,7 @@ AVAILABLE_EMBEDDINGS: set[str] = {
     "DeepPavlov/bert-base-bg-cs-pl-ru-cased",
     "DeepPavlov/rubert-base-cased-sentence",
     "sentence-transformers/distiluse-base-multilingual-cased-v2",
+    "cointegrated/LaBSE-en-ru",
 }
 
 
@@ -28,7 +29,7 @@ class DummyEmbeddingModel:
 
 
 class EmbeddingModel:
-    def __init__(self, model_name: str = "cointegrated/rubert-tiny2"):
+    def __init__(self, model_name: str = "cointegrated/LaBSE-en-ru"):
         self.model = SentenceTransformer(model_name)
 
     def generate(self, text: str | Iterable[str]) -> np.ndarray | Iterable[np.ndarray]:
@@ -45,3 +46,10 @@ class FastTextEmbeddingModel:
 
     def generate(self, text: str | Iterable[str]) -> np.ndarray | Iterable[np.ndarray]:
         return self.get_sentence_vector(self.model, text)
+
+
+if __name__ == "__main__":
+    model = EmbeddingModel()
+    v1, v2, v3 = model.generate("водитель"), model.generate("пилот"), model.generate("художник")
+    print(util.pytorch_cos_sim(v1, v2))
+    print(util.pytorch_cos_sim(v1, v3))
