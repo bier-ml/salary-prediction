@@ -30,6 +30,13 @@ class StackedModels(BaseMatchingModel):
         self.base_model_class = base_model_class
         self.models: Dict[int, BaseMatchingModel] = {}
 
+    @staticmethod
+    def retrieve_cluster_data(full_dataset: pd.DataFrame, cluster_label: int) -> pd.DataFrame:
+        if "cluster_label" not in full_dataset.columns:
+            raise KeyError("cluster_label not found in the DataFrame")
+
+        return full_dataset[full_dataset["cluster_label"] == cluster_label]
+
     def train(self, dataset_dict: Dict[int, pd.DataFrame], **train_kwargs) -> Self:
         for cluster_label, dataset in dataset_dict.items():
             model = self.base_model_class()
@@ -37,9 +44,6 @@ class StackedModels(BaseMatchingModel):
             self.models[cluster_label] = model
 
         print("Model trained")
-
-        # test_score = self.evaluate(...)
-        # print(f"Test score is {test_score}")
         return self
 
     def evaluate(self, X_dict: Dict[int, Any], y_dict: Dict[int, Any]) -> float:
