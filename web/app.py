@@ -1,11 +1,11 @@
 import streamlit as st
-from clustering_plot import create_plot
-from document_processor import PDFToText
 from streamlit_pdf_viewer import pdf_viewer
 
 from core.embedding_models import EmbeddingModel, FastTextEmbeddingModel
 from core.models.clustering_model import ClusteringModel, StackedModels
 from web import ROOT_PATH
+from web.clustering_plot import create_plot
+from web.document_processor import PDFToText
 
 
 @st.cache_resource(show_spinner="Загрузка модели fasttext...")

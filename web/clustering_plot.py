@@ -52,7 +52,7 @@ def create_plot(
     )
     x, y = df_skills_embeddings.iloc[0][["x", "y"]]
 
-    fig.add_scatter(x=[x], y=[y], marker=dict(color="red", size=20), name="Навыки кандидата")
+    fig.add_scatter(x=[x], y=[y], marker={"color": "red", "size": 20}, name="Навыки кандидата")
 
     fig.update_layout(hovermode="closest")
     return fig

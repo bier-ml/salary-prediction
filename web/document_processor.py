@@ -42,9 +42,9 @@ class MockNERModel:
             for example in filter(lambda ex: ex.lower() in text, examples)
         ]
 
-        additional_entities, result_str = self.extract_entities(text)
-        for key in additional_entities:
-            extracted_entities[key].append(additional_entities[key])
+        additional_entities, _ = self.extract_entities(text)
+        for key, value in additional_entities.items():
+            extracted_entities[key].append(value)
 
         return extracted_entities
 

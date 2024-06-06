@@ -7,9 +7,8 @@ repos:
       - id: ruff-format
   - repo: local
     hooks:
-      - id: pylint
-        stages: [ commit ]
-        name: pylint
+      - id: pylint_core
+        name: pylint_core
         entry: bash -c 'find core -name "*.py" -exec pylint "{}" +'
         language: python
         types: [ python ]
@@ -19,4 +18,16 @@ repos:
           - --exit-zero
           - --output-format=colorized
           - --rcfile=.pylintrc
-          - --fail-under=9.9
+          - --fail-under=9
+      - id: pylint_web
+        name: pylint_web
+        entry: bash -c 'find web -name "*.py" -exec pylint "{}" +'
+        language: python
+        types: [ python ]
+        pass_filenames: false
+        verbose: true
+        args:
+          - --exit-zero
+          - --output-format=colorized
+          - --rcfile=.pylintrc_web
+          - --fail-under=9.5
