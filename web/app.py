@@ -1,16 +1,17 @@
 import streamlit as st
+from streamlit_pdf_viewer import pdf_viewer
 
+from clustering_plot import create_plot
 from core.embedding_models import EmbeddingModel, FastTextEmbeddingModel
 from core.models.clustering_model import StackedModels, ClusteringModel
-from web import ROOT_PATH
-from streamlit_pdf_viewer import pdf_viewer
 from document_processor import PDFToText
+from web import ROOT_PATH
 
 
 @st.cache_resource(show_spinner='Загрузка модели fasttext...')
 def load_model(
         name: str = "stacked_model_fasttext",
-) -> tuple[StackedModels, EmbeddingModel | FastTextEmbeddingModel]:
+) -> tuple[StackedModels, EmbeddingModel | FastTextEmbeddingModel, ClusteringModel]:
     embedding_mapping = {
         "LaBSE-en-ru": EmbeddingModel(),
         "fasttext": FastTextEmbeddingModel(),
@@ -19,28 +20,32 @@ def load_model(
     models_mapping = {
         "stacked_model_fasttext": (
             StackedModels,
-            ClusteringModel().load_model(
-                ROOT_PATH / "checkpoints/clustering_model_fasttext.pkl"
-            ),
+            ClusteringModel(),
             embedding_mapping["fasttext"],
         )
     }
     model_object, clustering_model, embedding_model = models_mapping[name]
 
+    clustering_model = clustering_model.load_model(
+        ROOT_PATH / "checkpoints/clustering_model_fasttext.pkl"
+    )
+
     model = model_object(clustering_model=clustering_model).load_model(
         ROOT_PATH / "checkpoints/stacked_model_fasttext.pkl"
     )
-    return model, embedding_model
+    return model, embedding_model, clustering_model
 
 
 def run_server():
     st.set_page_config(page_title="Предсказание зарплаты", layout="wide", page_icon="🧊")
 
     if "model" not in st.session_state.keys():
-        st.session_state["model"], st.session_state["embedding_model"] = load_model()
+        (st.session_state["model"], st.session_state["embedding_model"],
+         st.session_state["clustering_model"]) = load_model()
 
     pretrained_model = st.session_state["model"]
     embedding_model = st.session_state["embedding_model"]
+    clustering_model = st.session_state["clustering_model"]
 
     st.markdown(
         """
@@ -88,6 +93,8 @@ def run_server():
                         st.write(
                             f"**{entity.capitalize()}**: {', '.join(values) if values else 'Не найдено'}"
                         )
+
+                    st.plotly_chart(create_plot(extracted_entities['Навыки'][0], clustering_model, embedding_model))
         else:
             st.warning("Загрузите документ, чтобы продолжить")
 
