@@ -4,11 +4,49 @@ from core.embedding_models import EmbeddingModel
 from core.models import CatboostRegressionModel, LinearRegressionModel
 from core.models.base_model import BaseMatchingModel
 from web import ROOT_PATH
+from pypdf import PdfReader
 
 embedding_mapping = {
     "rubert-tiny2": EmbeddingModel(),
     "fasttext": EmbeddingModel(),
 }
+
+
+class MockNERModel:
+    def __init__(self):
+        self.entities = {
+            "job_name": ["Software Engineer", "Data Scientist"],
+            "schedule": ["Full-time", "Part-time"],
+            "city": ["San Francisco", "New York"]
+        }
+
+    def predict(self, text):
+        extracted_entities = {
+            "job_name": [],
+            "schedule": [],
+            "city": []
+        }
+        for entity, examples in self.entities.items():
+            for example in examples:
+                if example in text:
+                    extracted_entities[entity].append(example)
+        return extracted_entities
+
+
+class PDFToText:
+    def __init__(self, file):
+        self.file = file
+        self.reader = PdfReader(self.file)
+
+    def extract_text(self):
+        text = ""
+        for page in self.reader.pages:
+            text += page.extract_text()
+        return text
+
+    def extract_entities(self, text):
+        ner_model = MockNERModel()
+        return ner_model.predict(text)
 
 
 def load_model(name: str = "catboost_rubert-tiny2.pkl") -> BaseMatchingModel:
@@ -40,37 +78,48 @@ AVAILABLE_MODELS: tuple = tuple([el.name for el in list((ROOT_PATH / "data/").gl
 def run_server():
     st.set_page_config(layout="wide")
 
-    st.title("Salary prediction app")
-    job_name = st.text_input("Enter job title", value="Программист")
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        model = st.selectbox(label="Select model", options=AVAILABLE_MODELS)
+    st.markdown(
+        """
+        <a href="https://streamlit.io">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/be/Logo_blue%403x.png" style="width:100px;">
+        </a>
+        """,
+        unsafe_allow_html=True
+    )
 
-    with col2:
-        schedule = st.selectbox(
-            label="Select schedule",
-            options=AVAILABLE_SCHEDULE,
-        )
+    st.title("Предсказание зарплаты по резюме")
 
-    with col3:
-        city = st.selectbox(label="Select city_id", options=[1, 57, 2, 102, 174])
+    pdf_file = st.file_uploader(label="Загрузите резюме в формате .pdf", type='pdf')
 
-    source = "\n".join([job_name, schedule, str(city)])
-    run_button = st.button("Run prediction")
+    run_button = st.button("Запустить")
     result_placeholder = st.empty()
 
+    model = 'test'
+    source = 'test'
     if run_button:
-        if job_name and model and schedule and city:
-            try:
-                trained_model = load_model(model)
-            except Exception as e:
-                st.error(f"Loading model error: {str(e)}")
+        if pdf_file:  # job_name and model and schedule and city:
+            pdf_to_text = PDFToText(pdf_file)
+            extracted_text = pdf_to_text.extract_text()
+            st.subheader("Extracted Text")
+            st.text_area(label="", value=extracted_text, height=400)
+
+            # try:
+            #     trained_model = load_model(model)
+            # except Exception as e:
+            #     st.error(f"Loading model error: {str(e)}")
+
+            extracted_entities = pdf_to_text.extract_entities(extracted_text)
+            st.subheader("Extracted Entities")
+            for entity, values in extracted_entities.items():
+                st.write(f"**{entity.capitalize()}**: {', '.join(values) if values else 'None found'}")
 
             result_placeholder.text("Processing...")
-            result = trained_model.predict(source)
-            result_placeholder.text(f"Predicted salary is: {result}")
+            st.subheader("Predicted Salary")
+            result = 0 #trained_model.predict(source)
+            result_placeholder.text("0")
+            result_placeholder.write(f"Predicted salary is: {result}")
         else:
-            st.error("Fill in required fields")
+            st.warning("Загрузите документ, чтобы продолжить")
 
 
 if __name__ == "__main__":
