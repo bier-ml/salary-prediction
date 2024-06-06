@@ -13,7 +13,7 @@ def change_type_to_list(x):
 
 
 def preprocess_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-    df["embedding"] = df.embedding.apply(lambda x: change_type_to_list(x))
+    df["embedding"] = df.embedding.apply(change_type_to_list)
     return df
 
 

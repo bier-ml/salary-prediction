@@ -24,8 +24,7 @@ class DummyEmbeddingModel:
     def generate(text: str | list[str], dim: int = 312) -> np.ndarray | Iterable[np.ndarray]:
         if isinstance(text, str):
             return np.random.rand(dim)
-        else:
-            return np.random.rand(len(text), dim)
+        return np.random.rand(len(text), dim)
 
 
 class EmbeddingModel:
@@ -49,7 +48,11 @@ class FastTextEmbeddingModel:
 
 
 if __name__ == "__main__":
-    model = EmbeddingModel()
-    v1, v2, v3 = model.generate("водитель"), model.generate("пилот"), model.generate("художник")
+    embedding_model = EmbeddingModel()
+    v1, v2, v3 = (
+        embedding_model.generate("водитель"),
+        embedding_model.generate("пилот"),
+        embedding_model.generate("художник"),
+    )
     print(util.pytorch_cos_sim(v1, v2))
     print(util.pytorch_cos_sim(v1, v3))

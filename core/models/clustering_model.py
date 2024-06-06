@@ -128,7 +128,7 @@ class StackedModels(BaseMatchingModel):
 
     def predict(self, embedding: np.ndarray, cluster_label: Optional[int] = None) -> float:
         if not (self.clustering_model or cluster_label is not None):
-            raise Exception("Provide either clusterization model or cluster label")
+            raise ValueError("Provide either clusterization model or cluster label")
 
         if cluster_label is None:
             cluster_label = self.clustering_model.predict(embedding)
