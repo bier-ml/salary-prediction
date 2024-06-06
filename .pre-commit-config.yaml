@@ -5,29 +5,24 @@ repos:
       - id: ruff
         args: [ --fix ]
       - id: ruff-format
-  - repo: local
+  - repo: https://github.com/pycqa/pylint
+    rev: v3.2.3
     hooks:
-      - id: pylint_core
+      - id: pylint
         name: pylint_core
-        entry: bash -c 'find core -name "*.py" -exec pylint "{}" +'
-        language: python
+        entry: poetry run pylint core
+        files: core/.*\.py$
+        language: system
         types: [ python ]
-        pass_filenames: false
         verbose: true
         args:
-          - --exit-zero
-          - --output-format=colorized
-          - --rcfile=.pylintrc
           - --fail-under=9
-      - id: pylint_web
+      - id: pylint
         name: pylint_web
-        entry: bash -c 'find web -name "*.py" -exec pylint "{}" +'
-        language: python
+        entry: poetry run pylint web
+        files: web/.*\.py$
+        language: system
         types: [ python ]
-        pass_filenames: false
         verbose: true
         args:
-          - --exit-zero
-          - --output-format=colorized
-          - --rcfile=.pylintrc_web
           - --fail-under=9.5
