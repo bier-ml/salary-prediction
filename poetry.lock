@@ -4165,6 +4165,23 @@ watchdog = {version = ">=2.1.5", markers = "platform_system != \"Darwin\""}
 snowflake = ["snowflake-connector-python (>=2.8.0)", "snowflake-snowpark-python (>=0.9.0)"]
 
 [[package]]
+name = "streamlit-pdf-viewer"
+version = "0.0.12"
+description = "Streamlit component for PDF visualisation and manipulation"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "streamlit_pdf_viewer-0.0.12-py3-none-any.whl", hash = "sha256:c01a69469cb2d19673e8c6d68c440fc8a6c813df05b7f863aa4653d71cb8ef88"},
+    {file = "streamlit_pdf_viewer-0.0.12.tar.gz", hash = "sha256:6f00b354b57a384f4c23c3b9be01be54b0fabe96acd63893e1759cf5a891cfa5"},
+]
+
+[package.dependencies]
+streamlit = ">=0.63"
+
+[package.extras]
+devel = ["wheel"]
+
+[[package]]
 name = "sympy"
 version = "1.12"
 description = "Computer algebra system (CAS) in Python"
@@ -4984,4 +5001,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "edb9f8854542879a066629fb7a842ac39748e3e83ed2dc1451fca081fe8a32ed"
+content-hash = "4b7773eb46e35c9a8fa722d8074931e050ec0b0515ee11e94c2805cd09088875"
