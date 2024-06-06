@@ -39,15 +39,15 @@ class PDFToText:
         return ner_model.predict(text)
 
 
-embedding_mapping = {
-    "LaBSE-en-ru": EmbeddingModel(),
-    "fasttext": FastTextEmbeddingModel(),
-}
-
-
+@st.cache_resource()
 def load_model(
     name: str = "stacked_model_fasttext",
 ) -> tuple[StackedModels, EmbeddingModel | FastTextEmbeddingModel]:
+    embedding_mapping = {
+        "LaBSE-en-ru": EmbeddingModel(),
+        "fasttext": FastTextEmbeddingModel(),
+    }
+
     models_mapping = {
         "stacked_model_fasttext": (
             StackedModels,
@@ -74,11 +74,15 @@ AVAILABLE_SCHEDULE: tuple = (
     "вахта",
 )
 
-pretrained_model, embedding_model = load_model()
+if "model" not in st.session_state.keys():
+    st.session_state["model"], st.session_state["embedding_model"] = load_model()
 
 
 def run_server():
-    st.set_page_config(layout="wide")
+    # st.set_page_config(layout="wide")
+
+    pretrained_model = st.session_state["model"]
+    embedding_model = st.session_state["embedding_model"]
 
     st.markdown(
         """
