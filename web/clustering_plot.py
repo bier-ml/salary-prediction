@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -14,7 +15,7 @@ from core.models.clustering_model import ClusteringModel
 def create_plot(
     sample_name: str,
     clustering_model: ClusteringModel,
-    embedding_model: EmbeddingModel | FastTextEmbeddingModel,
+    embedding_model: Union[EmbeddingModel, FastTextEmbeddingModel],
 ) -> Figure:
     sample_embedding = embedding_model.generate(sample_name)
     cluster_label = clustering_model.predict(sample_embedding)

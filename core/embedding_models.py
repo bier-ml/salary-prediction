@@ -31,7 +31,7 @@ class EmbeddingModel:
     def __init__(self, model_name: str = "cointegrated/LaBSE-en-ru"):
         self.model = SentenceTransformer(model_name)
 
-    def generate(self, text: str | Iterable[str]) -> np.ndarray | Iterable[np.ndarray]:
+    def generate(self, text: str | Iterable[str]) -> np.ndarray:
         return self.model.encode(text)
 
 
@@ -43,7 +43,7 @@ class FastTextEmbeddingModel:
     def get_sentence_vector(model: FastText, s: str) -> np.ndarray:
         return np.mean([model.wv[s_i] for s_i in s.split()], axis=0)
 
-    def generate(self, text: str | Iterable[str]) -> np.ndarray | Iterable[np.ndarray]:
+    def generate(self, text: str | Iterable[str]) -> np.ndarray:
         return self.get_sentence_vector(self.model, text)
 
 

@@ -36,11 +36,10 @@ class MockNERModel:
 
     def predict(self, text: str) -> defaultdict[str, list]:
         extracted_entities = defaultdict(list)
-        _ = [
-            extracted_entities[entity].append(example)
-            for entity, examples in self.entities.items()
-            for example in filter(lambda ex: ex.lower() in text, examples)
-        ]
+
+        for entity, examples in self.entities.items():
+            for example in filter(lambda ex: ex.lower() in text, examples):
+                extracted_entities[entity].append(example)
 
         additional_entities, _ = self.extract_entities(text)
         for key, value in additional_entities.items():

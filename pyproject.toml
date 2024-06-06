@@ -30,6 +30,7 @@ streamlit-pdf-viewer = "^0.0.12"
 ruff = "^0.4.8"
 pre-commit = "^3.7.1"
 pylint = "^3.2.3"
+mypy = "^1.10.0"
 
 
 [build-system]
@@ -50,11 +51,17 @@ order_by_type = true
 
 [tool.pylint]
 disable = [
-    "C0114",  # missing-module-docstring
-    "C0116",  # missing-function-docstring
-    "C0115",  # missing-class-docstring
-    "W1401",  # for using regex in the code
-    "C0103",  # For using data-science naming style (X_train, etc.)
+    "C0114", # missing-module-docstring
+    "C0116", # missing-function-docstring
+    "C0115", # missing-class-docstring
+    "W1401", # for using regex in the code
+    "C0103", # For using data-science naming style (X_train, etc.)
 ]
 [tool.pylint.'MASTER']
 max-line-length = 120
+
+[tool.mypy]
+check_untyped_defs = true
+ignore_missing_imports = true
+disallow_untyped_calls = false
+exclude = ['venv', '.venv', "tests", "docs", "notebooks"]

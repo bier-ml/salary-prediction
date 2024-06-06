@@ -14,7 +14,7 @@ repos:
         files: core/.*\.py$
         language: system
         types: [ python ]
-        verbose: true
+        verbose: false
         args:
           - --fail-under=9
       - id: pylint
@@ -23,6 +23,15 @@ repos:
         files: web/.*\.py$
         language: system
         types: [ python ]
-        verbose: true
+        verbose: false
         args:
           - --fail-under=9.5
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: "v1.4.1"
+    hooks:
+      - id: mypy
+        name: mypy
+        files: ^web/
+        entry: poetry run mypy web
+        pass_filenames: false
+        args: [ "--config-file", "pyproject.toml" ]

@@ -1,3 +1,5 @@
+from typing import Union
+
 import streamlit as st
 from streamlit_pdf_viewer import pdf_viewer
 
@@ -11,8 +13,8 @@ from web.document_processor import PDFToText
 @st.cache_resource(show_spinner="Загрузка модели fasttext...")
 def load_model(
     name: str = "stacked_model_fasttext",
-) -> tuple[StackedModels, EmbeddingModel | FastTextEmbeddingModel, ClusteringModel]:
-    embedding_mapping = {
+) -> tuple[StackedModels, Union[EmbeddingModel, FastTextEmbeddingModel], ClusteringModel]:
+    embedding_mapping: dict[str, Union[EmbeddingModel, FastTextEmbeddingModel]] = {
         "LaBSE-en-ru": EmbeddingModel(),
         "fasttext": FastTextEmbeddingModel(),
     }
