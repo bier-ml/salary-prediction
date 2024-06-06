@@ -3,11 +3,11 @@ import streamlit as st
 from core.embedding_models import EmbeddingModel, FastTextEmbeddingModel
 from core.models.clustering_model import StackedModels, ClusteringModel
 from web import ROOT_PATH
-
+from streamlit_pdf_viewer import pdf_viewer
 from document_processor import PDFToText
 
 
-@st.cache_resource(show_spinner='Loading fasttext model...')
+@st.cache_resource(show_spinner='Загрузка модели fasttext...')
 def load_model(
         name: str = "stacked_model_fasttext",
 ) -> tuple[StackedModels, EmbeddingModel | FastTextEmbeddingModel]:
@@ -33,21 +33,11 @@ def load_model(
     return model, embedding_model
 
 
-AVAILABLE_SCHEDULE: tuple = (
-    "полный рабочий день",
-    "частичная занятость",
-    "удаленная работа",
-    "сменный график",
-    "свободный график",
-    "вахта",
-)
-
-if "model" not in st.session_state.keys():
-    st.session_state["model"], st.session_state["embedding_model"] = load_model()
-
-
 def run_server():
-    # st.set_page_config(layout="wide")
+    st.set_page_config(page_title="Предсказание зарплаты", layout="wide", page_icon="🧊")
+
+    if "model" not in st.session_state.keys():
+        st.session_state["model"], st.session_state["embedding_model"] = load_model()
 
     pretrained_model = st.session_state["model"]
     embedding_model = st.session_state["embedding_model"]
@@ -66,30 +56,38 @@ def run_server():
     pdf_file = st.file_uploader(label="Загрузите резюме в формате .pdf", type="pdf")
 
     run_button = st.button("Запустить")
-    result_placeholder = st.empty()
 
     if run_button:
-        if pdf_file:  # job_name and model and schedule and city:
-            pdf_to_text = PDFToText(pdf_file)
-            extracted_text = pdf_to_text.extract_text()
-            st.subheader("Extracted Text")
-            st.text_area(label="", value=extracted_text, height=400)
+        if pdf_file:
+            col1, col2 = st.columns(2)
+            with col1:
+                binary_data = pdf_file.getvalue()
 
-            extracted_entities = pdf_to_text.extract_entities(extracted_text)
-            st.subheader("Extracted Entities")
-            for entity, values in extracted_entities.items():
-                st.write(
-                    f"**{entity.capitalize()}**: {', '.join(values) if values else 'None found'}"
-                )
+                pdf_viewer(input=binary_data,
+                           width=700)
+            with col2:
+                pdf_to_text = PDFToText(pdf_file)
 
-            result_placeholder.text("Processing...")
-            st.subheader("Predicted Salary")
+                extracted_text = pdf_to_text.extract_text()
 
-            source_embedding = embedding_model.generate(extracted_text)
-            result = pretrained_model.predict(source_embedding)
+                with st.spinner("Предсказываем зарплату..."):
+                    st.subheader("Предсказанная зарплата")
 
-            result_placeholder.empty()
-            st.write(f"Predicted salary is: {result}")
+                    source_embedding = embedding_model.generate(extracted_text)
+                    result = int(pretrained_model.predict(source_embedding) // 1000)
+                    st.info(f"**Зарплата**: {result} тыс. руб.")
+
+                with st.spinner("Обрабатываем документ..."):
+                    st.subheader("Извлеченный текст")
+                    with st.expander('Весь текст из файла'):
+                        st.text_area(label="", value=extracted_text, height=400)
+
+                    extracted_entities = pdf_to_text.extract_entities(extracted_text)
+                    st.subheader("Извлеченные признаки")
+                    for entity, values in extracted_entities.items():
+                        st.write(
+                            f"**{entity.capitalize()}**: {', '.join(values) if values else 'Не найдено'}"
+                        )
         else:
             st.warning("Загрузите документ, чтобы продолжить")
 
