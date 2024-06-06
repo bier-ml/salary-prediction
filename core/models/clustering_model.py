@@ -28,17 +28,38 @@ class ClusteringModel(BaseMatchingModel):
         return self
 
     def predict(self, embedding: np.ndarray) -> int:
+        embedding = np.atleast_2d(embedding)
         return self.model.predict(embedding)[0]
+
+    def save_model(self, path: Path | str) -> None:
+        with open(str(path), "wb") as f:
+            pickle.dump(self.model, f)
+        print(f"Model saved at {path}")
+
+    def load_model(self, path: Path | str) -> Self:
+        with open(path, "rb") as f:
+            self.model = pickle.load(f)
+        print("Model successfully loaded")
+        return self
 
 
 class StackedModels(BaseMatchingModel):
-    def __init__(self, base_model_class: type[CatboostRegressionModel] = CatboostRegressionModel, **model_kwargs):
+    def __init__(
+        self,
+        base_model_class: type[CatboostRegressionModel] = CatboostRegressionModel,
+        clustering_model: Optional[ClusteringModel] = None,
+        **model_kwargs,
+    ):
         self.base_model_class = base_model_class
         self.base_model_params = {**model_kwargs}
+
+        self.clustering_model = clustering_model
         self.models: Dict[int, BaseMatchingModel] = {}
 
     @staticmethod
-    def retrieve_cluster_data(full_dataset: pd.DataFrame, cluster_label: int) -> pd.DataFrame:
+    def retrieve_cluster_data(
+        full_dataset: pd.DataFrame, cluster_label: int
+    ) -> pd.DataFrame:
         if "cluster_label" not in full_dataset.columns:
             raise KeyError("cluster_label not found in the DataFrame")
 
@@ -67,9 +88,16 @@ class StackedModels(BaseMatchingModel):
             if column not in dataset.columns:
                 raise KeyError(f"{column} not in the DataFrame")
 
-    def train(self, dataset_dict: Dict[int, pd.DataFrame], test_size: float = 0.2, **train_kwargs) -> Self:
+    def train(
+        self,
+        dataset_dict: Dict[int, pd.DataFrame],
+        test_size: float = 0.2,
+        **train_kwargs,
+    ) -> Self:
         if test_size > 0.0:
-            split_dataset_dict = self.split_dict_dataset(dataset_dict, test_size=test_size)
+            split_dataset_dict = self.split_dict_dataset(
+                dataset_dict, test_size=test_size
+            )
         else:
             split_dataset_dict = {k: (v, None) for k, v in dataset_dict.items()}
 
@@ -81,7 +109,9 @@ class StackedModels(BaseMatchingModel):
         print("Model trained")
 
         if test_size > 0.0:
-            test_score = self.evaluate({k: v for k, (_, v) in split_dataset_dict.items()})
+            test_score = self.evaluate(
+                {k: v for k, (_, v) in split_dataset_dict.items()}
+            )
             print(f"Test score is {test_score}")
 
         return self
@@ -102,7 +132,15 @@ class StackedModels(BaseMatchingModel):
         print(json.dumps(cluster_metrics, indent=4))
         return np.mean(list(cluster_metrics.values()))
 
-    def predict(self, embedding: np.ndarray, cluster_label: int = 0) -> float:
+    def predict(
+        self, embedding: np.ndarray, cluster_label: Optional[int] = None
+    ) -> float:
+        if not (self.clustering_model or cluster_label is not None):
+            raise Exception("Provide either clusterization model or cluster label")
+
+        if cluster_label is None:
+            cluster_label = self.clustering_model.predict(embedding)
+
         return self.models[cluster_label].predict(embedding)
 
     def save_model(self, path: Path | str) -> None:
@@ -117,7 +155,11 @@ class StackedModels(BaseMatchingModel):
         return self
 
 
-def objective(trial, dataset_dict: Dict[int, pd.DataFrame], params: Optional[Dict[str, Any]] = None) -> float:
+def objective(
+    trial,
+    dataset_dict: Dict[int, pd.DataFrame],
+    params: Optional[Dict[str, Any]] = None,
+) -> float:
     if params is None:
         params = {
             "iterations": 1000,
