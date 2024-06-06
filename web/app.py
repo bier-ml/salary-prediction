@@ -1,16 +1,16 @@
 import streamlit as st
+from clustering_plot import create_plot
+from document_processor import PDFToText
 from streamlit_pdf_viewer import pdf_viewer
 
-from clustering_plot import create_plot
 from core.embedding_models import EmbeddingModel, FastTextEmbeddingModel
-from core.models.clustering_model import StackedModels, ClusteringModel
-from document_processor import PDFToText
+from core.models.clustering_model import ClusteringModel, StackedModels
 from web import ROOT_PATH
 
 
-@st.cache_resource(show_spinner='Загрузка модели fasttext...')
+@st.cache_resource(show_spinner="Загрузка модели fasttext...")
 def load_model(
-        name: str = "stacked_model_fasttext",
+    name: str = "stacked_model_fasttext",
 ) -> tuple[StackedModels, EmbeddingModel | FastTextEmbeddingModel, ClusteringModel]:
     embedding_mapping = {
         "LaBSE-en-ru": EmbeddingModel(),
@@ -26,9 +26,7 @@ def load_model(
     }
     model_object, clustering_model, embedding_model = models_mapping[name]
 
-    clustering_model = clustering_model.load_model(
-        ROOT_PATH / "checkpoints/clustering_model_fasttext.pkl"
-    )
+    clustering_model = clustering_model.load_model(ROOT_PATH / "checkpoints/clustering_model_fasttext.pkl")
 
     model = model_object(clustering_model=clustering_model).load_model(
         ROOT_PATH / "checkpoints/stacked_model_fasttext.pkl"
@@ -40,8 +38,11 @@ def run_server():
     st.set_page_config(page_title="Предсказание зарплаты", layout="wide", page_icon="🧊")
 
     if "model" not in st.session_state.keys():
-        (st.session_state["model"], st.session_state["embedding_model"],
-         st.session_state["clustering_model"]) = load_model()
+        (
+            st.session_state["model"],
+            st.session_state["embedding_model"],
+            st.session_state["clustering_model"],
+        ) = load_model()
 
     pretrained_model = st.session_state["model"]
     embedding_model = st.session_state["embedding_model"]
@@ -68,8 +69,7 @@ def run_server():
             with col1:
                 binary_data = pdf_file.getvalue()
 
-                pdf_viewer(input=binary_data,
-                           width=700)
+                pdf_viewer(input=binary_data, width=700)
             with col2:
                 pdf_to_text = PDFToText(pdf_file)
 
@@ -84,17 +84,21 @@ def run_server():
 
                 with st.spinner("Обрабатываем документ..."):
                     st.subheader("Извлеченный текст")
-                    with st.expander('Весь текст из файла'):
+                    with st.expander("Весь текст из файла"):
                         st.text_area(label="", value=extracted_text, height=400)
 
                     extracted_entities = pdf_to_text.extract_entities(extracted_text)
                     st.subheader("Извлеченные признаки")
                     for entity, values in extracted_entities.items():
-                        st.write(
-                            f"**{entity.capitalize()}**: {', '.join(values) if values else 'Не найдено'}"
-                        )
+                        st.write(f"**{entity.capitalize()}**: {', '.join(values) if values else 'Не найдено'}")
 
-                    st.plotly_chart(create_plot(extracted_entities['Навыки'][0], clustering_model, embedding_model))
+                    st.plotly_chart(
+                        create_plot(
+                            extracted_entities["Навыки"][0],
+                            clustering_model,
+                            embedding_model,
+                        )
+                    )
         else:
             st.warning("Загрузите документ, чтобы продолжить")
 

@@ -3,20 +3,33 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import plotly.express as px
+from plotly.graph_objs import Figure
 from sklearn.manifold import TSNE
 
 from core import ROOT_PATH
+from core.embedding_models import EmbeddingModel, FastTextEmbeddingModel
+from core.models.clustering_model import ClusteringModel
 
 
-def create_plot(sample_name, clustering_model, embedding_model):
+def create_plot(
+    sample_name: str,
+    clustering_model: ClusteringModel,
+    embedding_model: EmbeddingModel | FastTextEmbeddingModel,
+) -> Figure:
     sample_embedding = embedding_model.generate(sample_name)
     cluster_label = clustering_model.predict(sample_embedding)
 
-    df_sample = pd.Series({
-        "name": sample_name,
-        "embedding": sample_embedding,
-        "cluster_label": cluster_label,
-    }).to_frame().T
+    df_sample = (
+        pd.Series(
+            {
+                "name": sample_name,
+                "embedding": sample_embedding,
+                "cluster_label": cluster_label,
+            }
+        )
+        .to_frame()
+        .T
+    )
 
     data_path = Path("data/df_skills_embeddings.pkl")
     df = pd.read_pickle(ROOT_PATH / data_path)
@@ -35,16 +48,11 @@ def create_plot(sample_name, clustering_model, embedding_model):
         color="cluster_label",
         hover_name="name",
         title="Scatter Plot of Vacancy Embeddings Colored by Cluster Label",
-        height=700
+        height=700,
     )
-    x, y = df_skills_embeddings.iloc[0][['x', 'y']]
+    x, y = df_skills_embeddings.iloc[0][["x", "y"]]
 
-    fig.add_scatter(
-        x=[x],
-        y=[y],
-        marker=dict(color="red", size=20),
-        name="Навыки кандидата"
-    )
+    fig.add_scatter(x=[x], y=[y], marker=dict(color="red", size=20), name="Навыки кандидата")
 
     fig.update_layout(hovermode="closest")
     return fig

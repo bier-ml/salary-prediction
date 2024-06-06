@@ -26,6 +26,9 @@ dill = "^0.3.8"
 scipy = "<1.13.0"
 pypdf = "^4.2.0"
 plotly-express = "^0.4.1"
+streamlit-pdf-viewer = "^0.0.12"
+ruff = "^0.4.8"
+pre-commit = "^3.7.1"
 
 
 [build-system]

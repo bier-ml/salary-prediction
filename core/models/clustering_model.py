@@ -57,9 +57,7 @@ class StackedModels(BaseMatchingModel):
         self.models: Dict[int, BaseMatchingModel] = {}
 
     @staticmethod
-    def retrieve_cluster_data(
-        full_dataset: pd.DataFrame, cluster_label: int
-    ) -> pd.DataFrame:
+    def retrieve_cluster_data(full_dataset: pd.DataFrame, cluster_label: int) -> pd.DataFrame:
         if "cluster_label" not in full_dataset.columns:
             raise KeyError("cluster_label not found in the DataFrame")
 
@@ -95,9 +93,7 @@ class StackedModels(BaseMatchingModel):
         **train_kwargs,
     ) -> Self:
         if test_size > 0.0:
-            split_dataset_dict = self.split_dict_dataset(
-                dataset_dict, test_size=test_size
-            )
+            split_dataset_dict = self.split_dict_dataset(dataset_dict, test_size=test_size)
         else:
             split_dataset_dict = {k: (v, None) for k, v in dataset_dict.items()}
 
@@ -109,9 +105,7 @@ class StackedModels(BaseMatchingModel):
         print("Model trained")
 
         if test_size > 0.0:
-            test_score = self.evaluate(
-                {k: v for k, (_, v) in split_dataset_dict.items()}
-            )
+            test_score = self.evaluate({k: v for k, (_, v) in split_dataset_dict.items()})
             print(f"Test score is {test_score}")
 
         return self
@@ -132,9 +126,7 @@ class StackedModels(BaseMatchingModel):
         print(json.dumps(cluster_metrics, indent=4))
         return np.mean(list(cluster_metrics.values()))
 
-    def predict(
-        self, embedding: np.ndarray, cluster_label: Optional[int] = None
-    ) -> float:
+    def predict(self, embedding: np.ndarray, cluster_label: Optional[int] = None) -> float:
         if not (self.clustering_model or cluster_label is not None):
             raise Exception("Provide either clusterization model or cluster label")
 
