@@ -27,7 +27,7 @@ class MockNERModel:
             match = re.search(pattern, text, re.DOTALL if entity == "Навыки" else 0)
             if match:
                 entities[entity] = match.group(1).strip().replace("\n", "").replace(".", "")
-                entities[entity] = re.sub(r',\s*', ' ', entities[entity])
+                entities[entity] = re.sub(r",\s*", " ", entities[entity])
             else:
                 entities[entity] = ""
 

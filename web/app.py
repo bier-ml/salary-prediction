@@ -12,8 +12,8 @@ from web.document_processor import PDFToText
 
 @st.cache_resource(show_spinner="Загрузка модели fasttext...")
 def load_model(
-        name: str = "stacked_model_fasttext",
-) -> tuple[StackedModels, Union[EmbeddingModel, FastTextEmbeddingModel], ClusteringModel]:
+    name: str = "stacked_model_fasttext",
+) -> tuple[StackedModels, Union[EmbeddingModel, FastTextEmbeddingModel], ClusteringModel, ClusteringModel]:
     embedding_mapping: dict[str, Union[EmbeddingModel, FastTextEmbeddingModel]] = {
         "LaBSE-en-ru": EmbeddingModel(),
         "fasttext": FastTextEmbeddingModel(),
@@ -23,17 +23,19 @@ def load_model(
         "stacked_model_fasttext": (
             StackedModels,
             ClusteringModel(),
+            ClusteringModel(),
             embedding_mapping["fasttext"],
         )
     }
-    model_object, clustering_model, embedding_model = models_mapping[name]
+    model_object, clustering_model, clustering_position_model, embedding_model = models_mapping[name]
 
-    clustering_model = clustering_model.load_model(ROOT_PATH / "checkpoints/clustering_model_fasttext.pkl")
-
-    model = model_object(clustering_model=clustering_model).load_model(
-        ROOT_PATH / "checkpoints/stacked_model_fasttext.pkl"
+    clustering_model = clustering_model.load_model(ROOT_PATH / "checkpoints/clustering_model_mean_skills_embedding.pkl")
+    clustering_position_model = clustering_model.load_model(
+        ROOT_PATH / "checkpoints/clustering_model_position_embedding.pkl"
     )
-    return model, embedding_model, clustering_model
+
+    model = model_object().load_model(ROOT_PATH / "checkpoints/stacked_model_fasttext.pkl")
+    return model, embedding_model, clustering_model, clustering_position_model
 
 
 def run_server():
@@ -44,11 +46,13 @@ def run_server():
             st.session_state["model"],
             st.session_state["embedding_model"],
             st.session_state["clustering_model"],
+            st.session_state["clustering_position_model"],
         ) = load_model()
 
     pretrained_model = st.session_state["model"]
     embedding_model = st.session_state["embedding_model"]
     clustering_model = st.session_state["clustering_model"]
+    clustering_position_model = st.session_state["clustering_position_model"]
 
     st.image("https://upload.wikimedia.org/wikipedia/commons/b/be/Logo_blue%403x.png", width=100)
 
@@ -66,15 +70,28 @@ def run_server():
 
                 pdf_viewer(input=binary_data, width=700)
             with col2:
-                pdf_to_text = PDFToText(pdf_file)
+                with st.spinner("Строим эмбеддинги..."):
+                    pdf_to_text = PDFToText(pdf_file)
+                    extracted_text = pdf_to_text.extract_text()
+                    extracted_entities = pdf_to_text.extract_entities(extracted_text)
 
-                extracted_text = pdf_to_text.extract_text()
+                    position_str = extracted_entities["Желаемая должность"][0]
+                    schedule_str = extracted_entities["График работы"][0]
+                    education_str = extracted_entities["Образование"][0]
+                    skills_str = extracted_entities["Навыки"][0]
+
+                    concat_str = position_str + schedule_str + education_str + skills_str
+
+                    skills_embedding = embedding_model.generate(skills_str)
+                    predicted_cluster = clustering_model.predict(skills_embedding)
+
+                    vacancy_embedding = embedding_model.generate(concat_str)
+                    cluster_label = clustering_model.predict(skills_embedding)
 
                 with st.spinner("Предсказываем зарплату..."):
                     st.subheader("Предсказанная зарплата")
 
-                    source_embedding = embedding_model.generate(extracted_text)
-                    result = int(pretrained_model.predict(source_embedding) // 1000)
+                    result = int(pretrained_model.predict(vacancy_embedding, cluster_label=cluster_label) // 1000)
                     st.info(f"**Зарплата**: {result} тыс. руб.")
 
                 with st.spinner("Обрабатываем документ..."):
@@ -82,23 +99,21 @@ def run_server():
                     with st.expander("Весь текст из файла"):
                         st.text_area(label="", value=extracted_text, height=400)
 
-                    extracted_entities = pdf_to_text.extract_entities(extracted_text)
                     st.subheader("Извлеченные признаки")
                     for entity, values in extracted_entities.items():
                         if len(values[0]):
                             st.write(f"**{entity.capitalize()}**: {', '.join(values) if values else 'Не найдено'}")
 
-                    skills_str = extracted_entities["Навыки"][0]
-
                     if len(skills_str):
                         st.subheader("Диаграмма кластеров")
+                        st.info(f"**Кластер**: {predicted_cluster}")
                         st.plotly_chart(
                             create_plot(
-                                skills_str,
-                                clustering_model,
+                                position_str,
+                                clustering_position_model,
                                 embedding_model,
                             ),
-                            use_container_width=True
+                            use_container_width=True,
                         )
 
         else:
