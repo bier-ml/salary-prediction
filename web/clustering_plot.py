@@ -13,9 +13,9 @@ from core.models.clustering_model import ClusteringModel
 
 
 def create_plot(
-    sample_name: str,
-    clustering_model: ClusteringModel,
-    embedding_model: Union[EmbeddingModel, FastTextEmbeddingModel],
+        sample_name: str,
+        clustering_model: ClusteringModel,
+        embedding_model: Union[EmbeddingModel, FastTextEmbeddingModel],
 ) -> Figure:
     sample_embedding = embedding_model.generate(sample_name)
     cluster_label = clustering_model.predict(sample_embedding)
@@ -48,12 +48,12 @@ def create_plot(
         y="y",
         color="cluster_label",
         hover_name="name",
-        title="Scatter Plot of Vacancy Embeddings Colored by Cluster Label",
-        height=700,
+        # title="Scatter Plot of Vacancy Embeddings Colored by Cluster Label",
+        height=500,
     )
     x, y = df_skills_embeddings.iloc[0][["x", "y"]]
 
-    fig.add_scatter(x=[x], y=[y], marker={"color": "red", "size": 20}, name="Навыки кандидата")
+    fig.add_scatter(x=[x], y=[y], marker={"color": "black", "size": 15, "symbol": "x"}, name="Навыки кандидата")
 
     fig.update_layout(hovermode="closest")
     return fig

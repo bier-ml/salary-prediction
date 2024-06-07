@@ -12,7 +12,7 @@ from web.document_processor import PDFToText
 
 @st.cache_resource(show_spinner="Загрузка модели fasttext...")
 def load_model(
-    name: str = "stacked_model_fasttext",
+        name: str = "stacked_model_fasttext",
 ) -> tuple[StackedModels, Union[EmbeddingModel, FastTextEmbeddingModel], ClusteringModel]:
     embedding_mapping: dict[str, Union[EmbeddingModel, FastTextEmbeddingModel]] = {
         "LaBSE-en-ru": EmbeddingModel(),
@@ -50,14 +50,7 @@ def run_server():
     embedding_model = st.session_state["embedding_model"]
     clustering_model = st.session_state["clustering_model"]
 
-    st.markdown(
-        """
-        <a href="https://streamlit.io">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/be/Logo_blue%403x.png" style="width:100px;">
-        </a>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.image("https://upload.wikimedia.org/wikipedia/commons/b/be/Logo_blue%403x.png", width=100)
 
     st.title("Предсказание зарплаты по резюме")
 
@@ -67,7 +60,7 @@ def run_server():
 
     if run_button:
         if pdf_file:
-            col1, col2 = st.columns(2)
+            col1, col2 = st.columns([1, 2])
             with col1:
                 binary_data = pdf_file.getvalue()
 
@@ -92,15 +85,22 @@ def run_server():
                     extracted_entities = pdf_to_text.extract_entities(extracted_text)
                     st.subheader("Извлеченные признаки")
                     for entity, values in extracted_entities.items():
-                        st.write(f"**{entity.capitalize()}**: {', '.join(values) if values else 'Не найдено'}")
+                        if len(values[0]):
+                            st.write(f"**{entity.capitalize()}**: {', '.join(values) if values else 'Не найдено'}")
 
-                    st.plotly_chart(
-                        create_plot(
-                            extracted_entities["Навыки"][0],
-                            clustering_model,
-                            embedding_model,
+                    skills_str = extracted_entities["Навыки"][0]
+
+                    if len(skills_str):
+                        st.subheader("Диаграмма кластеров")
+                        st.plotly_chart(
+                            create_plot(
+                                skills_str,
+                                clustering_model,
+                                embedding_model,
+                            ),
+                            use_container_width=True
                         )
-                    )
+
         else:
             st.warning("Загрузите документ, чтобы продолжить")
 
