@@ -352,15 +352,6 @@
 - Увеличение пользовательской активности: ожидается увеличение активности пользователей на платформе благодаря возможности быстрого предварительного расчета зарплаты.
 
 
-
-# salary-prediction
-Salary prediction task for Rabota.ru
-
-## Demo
-
-TODO upload demo
-![Demo](data/demo.gif)
-
 ## Technologies
 
 - Python
@@ -396,29 +387,8 @@ TODO
 
 В качестве экспериментов были обучены и провалидированы декартово множество всех моделей и всех эмбедингов на всех
 обозначенных выше метриках. Результат считался положительным, если при кросс-валидации на тестовом датасете метрика
-превышала 0.5, так как
-данный результат может
-считаться не случайным.
+превышала 0.5, так как данный результат может считаться не случайным.
 
-### Experiments
-
-| Model                     | Embedding                      | MAE | 
-|---------------------------|--------------------------------|-----|
-| **Linear Regression**     | **RuBERT-tiny**                | 
-| **Linear Regression**     | **RuBERT**                     |
-| **Linear Regression**     | **FastText**                   |
-| **Linear Regression**     | **Sentence RuBERT**            |
-| **Linear Regression**     | **Sentence Multilingual BERT** |
-| **CatBoost Regressor**    | **RuBERT-tiny**                |
-| **CatBoost Regressor**    | **RuBERT**                     |
-| **CatBoost Regressor**    | **FastText**                   |
-| **CatBoost Regressor**    | **Sentence RuBERT**            |
-| **CatBoost Regressor**    | **Sentence Multilingual BERT** | 
-| **Two Layers Perceptron** | **RuBERT-tiny**                | 
-| **Two Layers Perceptron** | **RuBERT**                     | 
-| **Two Layers Perceptron** | **FastText**                   | 
-| **Two Layers Perceptron** | **Sentence RuBERT**            |
-| **Two Layers Perceptron** | **Sentence Multilingual BERT** | 
 
 ## Deployment
 
@@ -428,9 +398,6 @@ web-service. При загрузке своего резюме пользова�
 
 ## Product Details
 
-### Context
-
-TODO
 
 ### Interface
 
