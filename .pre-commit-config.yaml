@@ -1,0 +1,37 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.2.1
+    hooks:
+      - id: ruff
+        args: [ --fix ]
+      - id: ruff-format
+  - repo: https://github.com/pycqa/pylint
+    rev: v3.2.3
+    hooks:
+      - id: pylint
+        name: pylint_core
+        entry: poetry run pylint core
+        files: core/.*\.py$
+        language: system
+        types: [ python ]
+        verbose: false
+        args:
+          - --fail-under=9
+      - id: pylint
+        name: pylint_web
+        entry: poetry run pylint web
+        files: web/.*\.py$
+        language: system
+        types: [ python ]
+        verbose: false
+        args:
+          - --fail-under=9.5
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: "v1.4.1"
+    hooks:
+      - id: mypy
+        name: mypy
+        files: ^web/
+        entry: poetry run mypy web
+        pass_filenames: false
+        args: [ "--config-file", "pyproject.toml" ]

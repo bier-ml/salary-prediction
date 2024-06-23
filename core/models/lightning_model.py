@@ -30,7 +30,7 @@ class PlDataset(Dataset):
 
 class SimilarityNet(pl.LightningModule):
     def __init__(self, input_dim: int = 624):
-        super(SimilarityNet, self).__init__()
+        super().__init__()
 
         self.input_layer = nn.Linear(input_dim, 256)
         self.hidden_layer = nn.Linear(256, 128)
@@ -45,9 +45,7 @@ class SimilarityNet(pl.LightningModule):
         x, y = batch
         y_hat = self(x)
         loss = F.binary_cross_entropy(y_hat, y)
-        self.log(
-            "train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True
-        )
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -85,7 +83,6 @@ class TorchMatchingModel(BaseMatchingModel):
         self.model = model_class.load_from_checkpoint(checkpoint_path=checkpoint_path)
         self.model.eval()
         print("Model successfully loaded")
-        pass
 
 
 if __name__ == "__main__":
