@@ -359,14 +359,6 @@
 - Pandas and Jupyter notebooks for data preprocessing and analysis
 - DVC for dataset versioning
 
-### Methodology
-
-TODO
-
-## Data Preprocessing
-
-TODO
-
 ## Training Pipeline
 
 ### Dataset
